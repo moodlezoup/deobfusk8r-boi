@@ -24,16 +24,26 @@ import soot.options.Options;
 public class CFG {
 	public CFG(){}
 
-  int freshID = 0;
-  private int getId(Map<String, Integer> map, String signature) {
-			if(map.containsKey(signature)){
-				return map.get(signature);
-			}else{
-        int id = freshID;
-        freshID += 1;
-        map.put(signature, id);
-        return id;
-			}
+  static private class IDMap {
+    int freshID = 0;
+    Map<String, Integer> map = new HashMap<String, Integer>();
+	  public IDMap(){}
+
+    public int getId(String signature) {
+        if(map.containsKey(signature)){
+          return map.get(signature);
+        }else{
+          int id = freshID;
+          freshID += 1;
+          map.put(signature, id);
+          return id;
+        }
+    }
+
+    public Set<Map.Entry<String, Integer>>  entrySet() {
+      return map.entrySet();
+    }
+
   }
 
   private static void clearFile(File f) {
@@ -43,7 +53,7 @@ public class CFG {
   }
 	
 	//output the call graph to JSON formate
-	private void outputCallGraph(CallGraph cg, String apkTitle) throws IOException {
+	private static void outputCallGraph(CallGraph cg, String apkTitle) throws IOException {
 		Path curDir = Paths.get(System.getProperty("user.dir"));
 
 		Path edgeOutputPath = Paths.get(curDir.toString(), apkTitle + ".edges");
@@ -56,12 +66,13 @@ public class CFG {
 		FileWriter keyOutFW = new FileWriter(keyOut);
 
 		Iterator<Edge> itr = cg.iterator();
-    Map<String, Integer> map = new HashMap<String, Integer>();
+
+    IDMap map = new IDMap();
 
 		while(itr.hasNext()){
 			Edge e = itr.next();
-      int srcId = getId(map, e.getSrc().toString());
-      int dstId = getId(map, e.getTgt().toString());
+      int srcId = map.getId(e.getSrc().toString());
+      int dstId = map.getId(e.getTgt().toString());
       edgeOutFW.write(String.format("%d %d\n", srcId, dstId));
 		}
     for (Map.Entry<String, Integer> entry : map.entrySet())
@@ -79,7 +90,7 @@ public class CFG {
 		System.out.println("Usage: apk-file, android-jar-directory");		
 	}
 	
-	public void main(String[] args){
+	public static void main(String[] args){
 		if (args.length < 2){
 			printUsage();
 			return;
