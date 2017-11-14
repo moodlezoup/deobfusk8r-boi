@@ -12,9 +12,6 @@ import java.util.Set;
 
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import soot.PackManager;
 import soot.Scene;
 import soot.SootMethod;
@@ -26,36 +23,63 @@ import soot.options.Options;
 //dump the call graph from FlowDroid
 public class CFG {
 	public CFG(){}
+
+  int freshID = 0;
+  private int getId(Map<String, Integer> map, String signature) {
+			if(map.containsKey(signature)){
+				return map.get(signature);
+			}else{
+        int id = freshID;
+        freshID += 1;
+        map.put(signature, id);
+        return id;
+			}
+  }
+
+  private static void clearFile(File f) {
+			if(f.exists()){
+				f.delete();
+			}
+  }
 	
 	//output the call graph to JSON formate
-	private static String dumpCallGraph(CallGraph cg){
+	private void outputCallGraph(CallGraph cg, String apkTitle) throws IOException {
+		Path curDir = Paths.get(System.getProperty("user.dir"));
+
+		Path edgeOutputPath = Paths.get(curDir.toString(), apkTitle + ".edges");
+		File edgeOut = edgeOutputPath.toFile();
+    clearFile(edgeOut);
+		FileWriter edgeOutFW = new FileWriter(edgeOut);
+
+		Path keyOutputPath = Paths.get(curDir.toString(), apkTitle + ".key");
+		File keyOut = edgeOutputPath.toFile();
+		FileWriter keyOutFW = new FileWriter(keyOut);
+
 		Iterator<Edge> itr = cg.iterator();
-		Map<String, Set<String>> map = new HashMap<String, Set<String>>();
+    Map<String, Integer> map = new HashMap<String, Integer>();
 
 		while(itr.hasNext()){
 			Edge e = itr.next();
-			String srcSig = e.getSrc().toString();
-			String destSig = e.getTgt().toString();
-			Set<String> neighborSet;
-			if(map.containsKey(srcSig)){
-				neighborSet = map.get(srcSig);
-			}else{
-				neighborSet = new HashSet<String>();
-			}
-			neighborSet.add(destSig);
-			map.put(srcSig, neighborSet );
-			
+      int srcId = getId(map, e.getSrc().toString());
+      int dstId = getId(map, e.getTgt().toString());
+      edgeOutFW.write(String.format("%d %d\n", srcId, dstId));
 		}
-		Gson gson = new GsonBuilder().disableHtmlEscaping().create();
-		String json = gson.toJson(map);
-		return json;
+    for (Map.Entry<String, Integer> entry : map.entrySet())
+    {
+      keyOutFW.write(String.format("%d %s\n", entry.getKey(), entry.getValue()));
+    }
+    keyOutFW.flush();
+    keyOutFW.close();
+    edgeOutFW.flush();
+    edgeOutFW.close();
+		System.out.println("Written to files: " + keyOut.getName() + " and " + edgeOut.getName());
 	}
 	
 	private static void printUsage(){
 		System.out.println("Usage: apk-file, android-jar-directory");		
 	}
 	
-	public static void main(String[] args){
+	public void main(String[] args){
 		if (args.length < 2){
 			printUsage();
 			return;
@@ -78,26 +102,13 @@ public class CFG {
 
     app.constructCallgraph();
 
-		System.out.println("Call graph size: "+ Scene.v().getCallGraph().size());		
-		String res = dumpCallGraph(Scene.v().getCallGraph());
+    CallGraph cg = Scene.v().getCallGraph();
 
-		Path curDir = Paths.get(System.getProperty("user.dir"));
-		//where the JSON file is outputed 
-    String apkTitle = apkFileName.substring(0, dotIndex);
-		Path outputPath = Paths.get(curDir.toString(), apkTitle + ".cfg");
-		
-		File out = outputPath.toFile();
-		try {
-			if(out.exists()){
-				out.delete();
-			}
-			FileWriter fw = new FileWriter(out);
-			fw.write(res);
-			fw.flush();
-			fw.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		System.out.println("Written to file: "+outputPath);
+		System.out.println("Call graph size: "+ cg.size());		
+    try {
+      outputCallGraph(cg, apkFileName.substring(0, dotIndex));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
 	}
 }
