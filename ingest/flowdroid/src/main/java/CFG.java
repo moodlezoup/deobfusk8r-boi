@@ -62,7 +62,7 @@ public class CFG {
 		FileWriter edgeOutFW = new FileWriter(edgeOut);
 
 		Path keyOutputPath = Paths.get(curDir.toString(), apkTitle + ".key");
-		File keyOut = edgeOutputPath.toFile();
+		File keyOut = keyOutputPath.toFile();
 		FileWriter keyOutFW = new FileWriter(keyOut);
 
 		Iterator<Edge> itr = cg.iterator();
@@ -77,7 +77,7 @@ public class CFG {
 		}
     for (Map.Entry<String, Integer> entry : map.entrySet())
     {
-      keyOutFW.write(String.format("%d %s\n", entry.getKey(), entry.getValue()));
+      keyOutFW.write(String.format("%d %s\n", entry.getValue(), entry.getKey()));
     }
     keyOutFW.flush();
     keyOutFW.close();
