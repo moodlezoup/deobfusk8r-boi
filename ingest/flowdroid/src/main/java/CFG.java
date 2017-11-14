@@ -65,9 +65,11 @@ public class CFG {
 		String androidJarPath = args[1];
 
     File apkFile = new File(apkPath);
-    String extension = apkFile.getName().substring(apkFile.getName().lastIndexOf("."));
+    String apkFileName = apkFile.getName();
+    int dotIndex = apkFileName.lastIndexOf(".");
+    String extension = apkFileName.substring(dotIndex);
     if (!extension.equals(".apk") || !apkFile.exists()){
-      System.out.println("apk-file not exists "+ apkFile.getName());
+      System.out.println("apk-file "+ apkFile.getName() + " does not exist");
       return;
     }
 
@@ -81,7 +83,8 @@ public class CFG {
 
 		Path curDir = Paths.get(System.getProperty("user.dir"));
 		//where the JSON file is outputed 
-		Path outputPath = Paths.get(curDir.toString(), "sltatic-cfg-"+ apkFile.getName().substring(0, apkFile.getName().lastIndexOf(".")));
+    String apkTitle = apkFileName.substring(0, dotIndex);
+		Path outputPath = Paths.get(curDir.toString(), apkTitle + ".cfg");
 		
 		File out = outputPath.toFile();
 		try {
