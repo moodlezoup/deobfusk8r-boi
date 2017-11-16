@@ -5,8 +5,8 @@ from subprocess import call
 
 def getFilePaths():
     file_paths = []
-    for family in os.listdir('~/amd_data'):
-        path = '~/amd_data/' + family
+    for family in os.listdir('~/ssd1/amd_data'):
+        path = '~/ssd1/amd_data/' + family
         for apk in os.listdir(path):
             file_paths.append(path + '/' + apk)
     return file_paths
