@@ -22,6 +22,7 @@ import soot.options.Options;
 
 //dump the call graph from FlowDroid
 public class CFG {
+  private static String o_dir = "output";
 	public CFG(){}
 
   static private class IDMap {
@@ -53,14 +54,22 @@ public class CFG {
   }
 	
 	//output the call graph to JSON formate
-	private static void outputCallGraph(CallGraph cg, String apkTitle) throws IOException {
-		Path edgeOutputPath = Paths.get(curDir.toString(), apkTitle + ".edges");
+	private static void outputCallGraph(CallGraph cg,
+            String apkFamily,
+            String apkTitle) throws IOException {
+    Path curDir = Paths.get(System.getProperty("user.dir"));
+		Path edgeOutputPath = Paths.get(curDir.toString(), o_dir, apkFamily, apkTitle + ".edges");
 		File edgeOut = edgeOutputPath.toFile();
+    File directory = edgeOut.getParentFile();
+    if (!directory.exists()) {
+      directory.mkdir();
+    }
     clearFile(edgeOut);
 		FileWriter edgeOutFW = new FileWriter(edgeOut);
 
-		Path keyOutputPath = Paths.get(curDir.toString(), apkTitle + ".key");
+		Path keyOutputPath = Paths.get(curDir.toString(), o_dir, apkFamily, apkTitle + ".key");
 		File keyOut = keyOutputPath.toFile();
+    clearFile(keyOut);
 		FileWriter keyOutFW = new FileWriter(keyOut);
 
 		Iterator<Edge> itr = cg.iterator();
@@ -99,6 +108,7 @@ public class CFG {
 
     File apkFile = new File(apkPath);
     String apkFileName = apkFile.getName();
+    String apkFileFamily = apkFile.getParentFile().getName();
     int dotIndex = apkFileName.lastIndexOf(".");
     String extension = apkFileName.substring(dotIndex);
     if (!extension.equals(".apk") || !apkFile.exists()){
@@ -115,7 +125,7 @@ public class CFG {
 
 		System.out.println("Call graph size: "+ cg.size());		
     try {
-      outputCallGraph(cg, apkFileName.substring(0, dotIndex));
+      outputCallGraph(cg, apkFileFamily, apkFileName.substring(0, dotIndex));
     } catch (IOException e) {
       e.printStackTrace();
     }
