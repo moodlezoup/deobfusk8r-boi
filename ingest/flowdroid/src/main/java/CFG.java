@@ -54,8 +54,6 @@ public class CFG {
 	
 	//output the call graph to JSON formate
 	private static void outputCallGraph(CallGraph cg, String apkTitle) throws IOException {
-		Path curDir = Paths.get(System.getProperty("user.dir"));
-
 		Path edgeOutputPath = Paths.get(curDir.toString(), apkTitle + ".edges");
 		File edgeOut = edgeOutputPath.toFile();
     clearFile(edgeOut);
