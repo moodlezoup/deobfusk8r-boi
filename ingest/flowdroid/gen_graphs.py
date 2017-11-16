@@ -14,7 +14,7 @@ def getFilePaths():
 
 def genGraphs(file_path):
     print file_path
-    call('java -jar flowdroid/target/flowdroid-cfg-0.1.0.jar ' + file_path + ' ~/ssd1/sdk/platforms')
+    call('java -jar target/flowdroid-cfg-0.1.0.jar ' + file_path + ' ~/ssd1/sdk/platforms')
 
 
 if __name__ == '__main__':
