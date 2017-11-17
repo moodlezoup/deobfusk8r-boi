@@ -5,8 +5,8 @@ from subprocess import call
 
 def getFilePaths():
     file_paths = []
-    for family in os.listdir('~/ssd1/amd_data'):
-        path = '~/ssd1/amd_data/' + family
+    for family in os.listdir('/home/ec2-user/ssd1/amd_data'):
+        path = '/home/ec2-user/ssd1/amd_data/' + family
         for apk in os.listdir(path):
             file_paths.append(path + '/' + apk)
     return file_paths
@@ -14,7 +14,7 @@ def getFilePaths():
 
 def genGraphs(file_path):
     print file_path
-    call('java -jar target/flowdroid-cfg-0.1.0.jar ' + file_path + ' ~/ssd1/sdk/platforms')
+    call('java -jar target/flowdroid-cfg-0.1.0.jar ' + file_path + ' ~/ssd1/sdk/platforms', shell=True)
 
 
 if __name__ == '__main__':
