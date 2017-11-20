@@ -6,18 +6,25 @@ import os
 import random
 import graph_features
 
-def sampleFeatures(family, feature, numSamples=500):
+def sampleFeatures(family, feature, numSamples, apiGraph):
     path = 'data/' + family + '/'
     files = os.listdir(path)
-    edge_files = filter(lambda x: '.edges' in x, files)
-    random.shuffle(edge_files)
+    if apiGraph:
+        graph_files = filter(lambda x: '.apigraph' in x, files)
+    else:
+        graph_files = filter(lambda x: '.edges' in x, files)
+    random.shuffle(graph_files)
     features = np.zeros(numSamples)
     count = 0
     i = 0
     while count < numSamples:
-        f = edge_files[i]
+        f = graph_files[i]
         i += 1
-        G = snap.LoadEdgeList(snap.PNEANet, path + f, 0, 1)
+        if apiGraph:
+            FIn = snap.TFIn(path + f)
+            G = snap.TNEANet.Load(FIn)
+        else:
+            G = snap.LoadEdgeList(snap.PNEANet, path + f, 0, 1)
         if G.GetEdges() == 0 or G.GetNodes() == 0:
             continue
         extractor = graph_features.extractors[feature]
@@ -25,27 +32,35 @@ def sampleFeatures(family, feature, numSamples=500):
         count += 1
     return features
 
-def avgFeature(family, feature, numSamples=200):
-    features = sampleFeatures(family, feature, numSamples)
+
+def avgFeature(family, feature, numSamples, apiGraph):
+    features = sampleFeatures(family, feature, numSamples, apiGraph)
     return (np.mean(features), np.std(features))
 
-def compareGraphFeature(families, feature):
-    features = {f: avgFeature(f, feature) for f in families}
+
+def compareGraphFeature(families, feature, numSamples=500, apiGraph=False):
+    features = {f: avgFeature(f, feature, numSamples, apiGraph) for f in families}
     pprint.pprint(features)
-    # features = [avgFeature(f) for f in families]
+
 
 # def plotGraphFeature(families, feature):
 #     familyFeatures = {family: sampleFeatures(f, feature) for f in families}
     # for family, features in familyFeatures.items():
 
 
-def avgDegreeDist(family, direction, numSamples=100):
+def avgDegreeDist(family, direction, numSamples, apiGraph):
     path = 'data/' + family + '/'
     files = os.listdir(path)
-    edge_files = filter(lambda x: '.edges' in x, files)
-    random.shuffle(edge_files)
+    if apiGraph:
+        graph_files = filter(lambda x: '.apigraph' in x, files)
+    else:
+        graph_files = filter(lambda x: '.edges' in x, files)
+    random.shuffle(graph_files)
     maxdeg = 0
-    Gs = [snap.LoadEdgeList(snap.PNEANet, path + f, 0, 1) for f in edge_files[:numSamples]]
+    if apiGraph:
+        Gs = [snap.TNEANet.Load(snap.TFIn(path + f)) for f in graph_files[:numSamples]]
+    else:
+        Gs = [snap.LoadEdgeList(snap.PNEANet, path + f, 0, 1) for f in graph_files[:numSamples]]
     if direction == 'in':
         maxdeg = max([G.GetNI((snap.GetMxInDegNId(G))).GetInDeg() for G in Gs])
     else:
@@ -65,8 +80,8 @@ def avgDegreeDist(family, direction, numSamples=100):
     avg_deg_dist = avg_deg_dist / numSamples
     return avg_deg_dist
 
-def plotDegreeDist(families, direction):
-    dists = [avgDegreeDist(f, direction) for f in families]
+def plotDegreeDist(families, direction, numSamples=100, apiGraph=False):
+    dists = [avgDegreeDist(f, direction, numSamples, apiGraph) for f in families]
     maxlen = max([len(dist) for dist in dists])
     for i, dist in enumerate(dists):
         if len(dist) < maxlen:
@@ -96,10 +111,10 @@ def plotDegreeDist(families, direction):
     plt.show()
 
 def main():
-    # plotDegreeDist(['Airpush', 'Kuguo', 'Dowgin', 'DroidKungFu', 'BankBot', 'FakeInst'], 'out')
+    # plotDegreeDist(['Airpush', 'Kuguo', 'Dowgin', 'DroidKungFu', 'BankBot', 'FakeInst'], 'in', numSamples=100, apiGraph=True)
     for feature in graph_features.extractors.keys():
         print feature
-        compareGraphFeature(['Airpush', 'Kuguo', 'Dowgin', 'DroidKungFu', 'BankBot', 'FakeInst'], feature)
+        compareGraphFeature(['Airpush', 'Kuguo', 'Dowgin', 'DroidKungFu', 'BankBot', 'FakeInst'], feature, numSamples=100, apiGraph=True)
 
 if __name__ == "__main__":
     main()

@@ -2,7 +2,6 @@
 import snap
 import numpy as np
 import pprint
-# import graph_utils
 
 # parser = argparse.ArgumentParser()
 # parser.add_argument('--inputFile', '-i', required=True)
