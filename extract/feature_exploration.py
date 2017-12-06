@@ -7,7 +7,7 @@ import random
 import graph_features
 
 def sampleFeatures(family, feature, numSamples, apiGraph):
-    path = 'data/' + family + '/'
+    path = 'data/graphs/' + family + '/'
     files = os.listdir(path)
     if apiGraph:
         graph_files = filter(lambda x: '.apigraph' in x, files)
@@ -49,7 +49,7 @@ def compareGraphFeature(families, feature, numSamples=500, apiGraph=False):
 
 
 def avgDegreeDist(family, direction, numSamples, apiGraph):
-    path = 'data/' + family + '/'
+    path = 'data/graphs/' + family + '/'
     files = os.listdir(path)
     if apiGraph:
         graph_files = filter(lambda x: '.apigraph' in x, files)

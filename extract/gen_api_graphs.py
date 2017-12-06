@@ -4,19 +4,19 @@ import multiprocessing
 
 
 api_packages = set()
-package_ids = {'other': 0}
+package_ids = {}
 with open('extract/api_packages.txt') as f:
     for i, line in enumerate(f):
         api_packages.add(line.strip())
-        package_ids[line.strip()] = i + 1
+        package_ids[line.strip()] = i
 
 
 def getFileNames():
     file_names = []
-    for family in os.listdir('data'):
+    for family in os.listdir('data/graphs'):
         if family == '.githold':
             continue
-        path = 'data/' + family + '/'
+        path = 'data/graphs' + family + '/'
         all_files = os.listdir(path)
         file_names += [path + f.split('.')[0] for f in all_files if '.edges' in f]
     return file_names
@@ -37,13 +37,22 @@ def genApiGraph(file_name):
                 node_to_package[nid] = package_ids[api_package]
                 packages_that_appear.add(api_package)
             else:
-                node_to_package[nid] = package_ids['other']
-                packages_that_appear.add('other')
+                if full_path not in package_ids:
+                    package_ids[full_path] = len(package_ids)
+                    packages_that_appear.add(full_path)
+                node_to_package[nid] = package_ids[full_path]
+
+    # print package_ids
+    # print packages_that_appear
+    # print node_to_package
+    print len(node_to_package)
+    print len(package_ids)
 
     api_graph = snap.TNEANet.New()
     for package, i in package_ids.items():
-        if package in packages_that_appear:
-            api_graph.AddNode(i)
+        # if package in packages_that_appear:
+        api_graph.AddNode(i)
+
     with open(edge_file, 'r') as f:
         for line in f:
             u, v = line.strip().split(' ')
