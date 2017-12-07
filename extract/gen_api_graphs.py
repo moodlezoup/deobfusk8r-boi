@@ -42,12 +42,6 @@ def genApiGraph(file_name):
                     packages_that_appear.add(full_path)
                 node_to_package[nid] = package_ids[full_path]
 
-    # print package_ids
-    # print packages_that_appear
-    # print node_to_package
-    print len(node_to_package)
-    print len(package_ids)
-
     api_graph = snap.TNEANet.New()
     for package, i in package_ids.items():
         # if package in packages_that_appear:
