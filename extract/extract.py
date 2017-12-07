@@ -4,15 +4,14 @@ import graph_features
 import api_features
 import subgraph_features
 import json
+import os
+import snap
+import multiprocessing
 
 
 db_path = 'data/processed/data.sqlite'
 
-family_types = json.load(open('data/family_types.json'))
-all_files = []
-files_by_family = {}
-files_by_type = {}
-files_by_type2 = {}
+family_types = json.load(open('extract/family_types.json'))
 
 
 def splitData(d):
@@ -22,14 +21,24 @@ def splitData(d):
 
 
 def processFileNames():
+    global all_files
+    global files_by_family
+    global files_by_type
+    global files_by_type2
+
+    all_files = []
+    files_by_family = {}
+    files_by_type = {}
+    files_by_type2 = {}
+
     for family in os.listdir('data/graphs'):
         if family == '.githold':
             continue
         path = 'data/graphs/' + family + '/'
 
         files = os.listdir(path)
-        all_files += files
         file_names = [path + f.split('.')[0] for f in files if '.edges' in f]
+        all_files += file_names
         files_by_family[family] = file_names
 
         family_type = family_types[family]
@@ -49,40 +58,50 @@ def processFileNames():
 def extractSubgraphFeatures(features, G, apiG):
     def freqFeature(prefix, frequencies):
         for i, freq in enumerate(frequencies):
-            features[prefix + ' ' + i] = freq
+            features[prefix + ' ' + str(i)] = freq
 
-    threeSubgraphsFreqsG = subgraph_features.estimate3SubgraphFrequencies(G)
+    # threeSubgraphsFreqsG = subgraph_features.estimate3SubgraphFrequencies(G)
     threeSubgraphsFreqsApi = subgraph_features.estimate3SubgraphFrequencies(apiG)
-    freqFeature('G 3-subgraph', threeSubgraphsFreqsG)
+    # freqFeature('G 3-subgraph', threeSubgraphsFreqsG)
     freqFeature('Api 3-subgraph', threeSubgraphsFreqsApi)
 
     # Weight the less frequent subgraphs more heavily
-    fourSubgraphsFreqsG = subgraph_features.estimate4SubgraphFrequencies(G)[:4]
+    # fourSubgraphsFreqsG = subgraph_features.estimate4SubgraphFrequencies(G)[:4]
     fourSubgraphsFreqsApi = subgraph_features.estimate4SubgraphFrequencies(apiG)[:4]
-    fourSubgraphsFreqsG += subgraph_features.estimate4SubgraphFrequencies(G, connected=False)[4:]
+    # fourSubgraphsFreqsG += subgraph_features.estimate4SubgraphFrequencies(G, connected=False)[4:]
     fourSubgraphsFreqsApi += subgraph_features.estimate4SubgraphFrequencies(apiG, connected=False)[4:]
-    freqFeature('G 4-subgraph', fourSubgraphsFreqsG)
+    # freqFeature('G 4-subgraph', fourSubgraphsFreqsG)
     freqFeature('Api 4-subgraph', fourSubgraphsFreqsApi)
 
 
-def extractAll(db):
-    for f in all_files:
-        file_name = f.split('/')[-1]
-        family = f.split('/')[2]
-        G = snap.LoadEdgeList(snap.PNEANet, f + '.edges', 0, 1)
-        FIn = snap.TFIn(f + '.apigraph')
-        apiG = snap.TNEANet.Load(FIn)
+def extract(f):
+    print f
+    # print 'Loading graphs...'
+    file_name = f.split('/')[-1]
+    family = f.split('/')[2]
+    G = snap.LoadEdgeList(snap.PNEANet, f + '.edges', 0, 1)
+    FIn = snap.TFIn(f + '.apigraph')
+    apiG = snap.TNEANet.Load(FIn)
 
-        features = {}
-        for feature, extractor in graph_features.extractors.items():
-            features[feature] = extractor(G)
-            features['api_' + feature] = extractor(apiG)
+    features = {}
+    for feature, extractor in graph_features.extractors.items():
+        # print feature
+        features[feature] = extractor(G)
+        features['api_' + feature] = extractor(apiG)
 
-        features['max indeg node'] = api_features.maxIndegNode(apiG)
-        features['max closeness node'] = api_features.maxClosenessNode(apiG)
+    # print 'Api features'
+    features['max indeg node'] = api_features.maxIndegNode(apiG)
+    features['max closeness node'] = api_features.maxClosenessNode(apiG)
 
-        extractSubgraphFeatures(features, G, apiG)
-        db[file_name] = features
+    # print 'Subgraph features'
+    extractSubgraphFeatures(features, G, apiG)
+    sqlite_db[file_name] = features
+
+
+
+def extractAll():
+    p = multiprocessing.Pool(multiprocessing.cpu_count())
+    p.map(extract, all_files)
 
 
 def main():
@@ -93,14 +112,14 @@ def main():
     for d in [files_by_family, files_by_type, files_by_type2]:
         splitData(d)
 
-
+    global sqlite_db
     sqlite_db = SqliteDict(db_path, autocommit=True)
     sqlite_db['files_by_family'] = files_by_family
     sqlite_db['files_by_type'] = files_by_type
     sqlite_db['files_by_type2'] = files_by_type2
 
     print 'Extracting...'
-    extractAll(sqlite_db)
+    extractAll()
 
     sqlite_db.close()
 

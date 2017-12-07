@@ -16,13 +16,14 @@ def getFileNames():
     for family in os.listdir('data/graphs'):
         if family == '.githold':
             continue
-        path = 'data/graphs' + family + '/'
+        path = 'data/graphs/' + family + '/'
         all_files = os.listdir(path)
         file_names += [path + f.split('.')[0] for f in all_files if '.edges' in f]
     return file_names
 
 
 def genApiGraph(file_name):
+    print file_name
     key_file = file_name + '.key'
     edge_file = file_name + '.edges'
 
@@ -48,13 +49,10 @@ def genApiGraph(file_name):
         api_graph.AddNode(i)
 
     with open(edge_file, 'r') as f:
-        for line in f:
-            u, v = line.strip().split(' ')
-            api_graph.AddEdge(node_to_package[u], node_to_package[v])
-
-    FOut = snap.TFOut(file_name + '.apigraph')
-    api_graph.Save(FOut)
-    FOut.Flush()
+        with open (file_name + '.apigraph', 'w') as out:
+            for line in f:
+                u, v = line.strip().split(' ')
+                out.write(str(node_to_package[u]) + ' ' + str(node_to_package[v]) + '\n')
 
 
 def main():

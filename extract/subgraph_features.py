@@ -2,7 +2,7 @@ import snap
 import numpy as np
 
 
-num_samples = 100000
+num_samples = 50000
 
 
 def estimate3SubgraphFrequencies(Network):
@@ -44,7 +44,7 @@ def estimate3SubgraphFrequencies(Network):
             else:
                 subgraph_counts[6] += 1
 
-    subgraph_frequencies = subgraph_counts / sum(subgraph_counts)
+    return list(subgraph_counts / sum(subgraph_counts))
 
 
 def estimate4SubgraphFrequencies(Network, connected=True):
@@ -101,4 +101,4 @@ def estimate4SubgraphFrequencies(Network, connected=True):
         else:
             subgraph_counts[9] += 1
 
-    subgraph_frequencies = subgraph_counts / sum(subgraph_counts)
+    return list(subgraph_counts / sum(subgraph_counts))
