@@ -80,8 +80,7 @@ def extract(f):
     file_name = f.split('/')[-1]
     family = f.split('/')[2]
     G = snap.LoadEdgeList(snap.PNEANet, f + '.edges', 0, 1)
-    FIn = snap.TFIn(f + '.apigraph')
-    apiG = snap.TNEANet.Load(FIn)
+    apiG = snap.LoadEdgeList(snap.PNEANet, f + '.apigraph', 0, 1)
 
     features = {}
     for feature, extractor in graph_features.extractors.items():
