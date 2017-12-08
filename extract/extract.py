@@ -32,7 +32,7 @@ def processFileNames():
     files_by_type2 = {}
 
     for family in os.listdir('data/graphs'):
-        if family == '.githold':
+        if family[0] == '.':
             continue
         path = 'data/graphs/' + family + '/'
 
@@ -66,10 +66,10 @@ def extractSubgraphFeatures(features, G, apiG):
     freqFeature('Api 3-subgraph', threeSubgraphsFreqsApi)
 
     # Weight the less frequent subgraphs more heavily
-    # fourSubgraphsFreqsG = subgraph_features.estimate4SubgraphFrequencies(G)[:4]
-    fourSubgraphsFreqsApi = subgraph_features.estimate4SubgraphFrequencies(apiG)[:4]
-    # fourSubgraphsFreqsG += subgraph_features.estimate4SubgraphFrequencies(G, connected=False)[4:]
-    fourSubgraphsFreqsApi += subgraph_features.estimate4SubgraphFrequencies(apiG, connected=False)[4:]
+    # fourSubgraphsFreqsG = subgraph_features.estimate4SubgraphFrequencies(G, connected=False)[:4]
+    fourSubgraphsFreqsApi = subgraph_features.estimate4SubgraphFrequencies(apiG, connected=False)[:4]
+    # fourSubgraphsFreqsG += subgraph_features.estimate4SubgraphFrequencies(G)[4:]
+    fourSubgraphsFreqsApi += subgraph_features.estimate4SubgraphFrequencies(apiG)[4:]
     # freqFeature('G 4-subgraph', fourSubgraphsFreqsG)
     freqFeature('Api 4-subgraph', fourSubgraphsFreqsApi)
 
@@ -95,7 +95,6 @@ def extract(f):
     # print 'Subgraph features'
     extractSubgraphFeatures(features, G, apiG)
     sqlite_db[file_name] = features
-
 
 
 def extractAll():
