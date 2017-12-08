@@ -76,26 +76,31 @@ def extractSubgraphFeatures(features, G, apiG):
 
 
 def extract(f):
-    print f
-    # print 'Loading graphs...'
-    file_name = f.split('/')[-1]
-    family = f.split('/')[2]
-    G = snap.LoadEdgeList(snap.PNEANet, f + '.edges', 0, 1)
-    apiG = snap.LoadEdgeList(snap.PNEANet, f + '.apigraph', 0, 1)
+    try:
+        print f
+        # print 'Loading graphs...'
+        file_name = f.split('/')[-1]
+        family = f.split('/')[2]
+        G = snap.LoadEdgeList(snap.PNEANet, f + '.edges', 0, 1)
+        apiG = snap.LoadEdgeList(snap.PNEANet, f + '.apigraph', 0, 1)
+        if G.GetNodes() == 0 or apiG.GetNodes() == 0:
+            return -1
 
-    features = {}
-    for feature, extractor in graph_features.extractors.items():
-        # print feature
-        features[feature] = extractor(G)
-        features['api_' + feature] = extractor(apiG)
+        features = {}
+        for feature, extractor in graph_features.extractors.items():
+            # print feature
+            features[feature] = extractor(G)
+            features['api_' + feature] = extractor(apiG)
 
-    # print 'Api features'
-    features['max indeg node'] = api_features.maxIndegNode(apiG)
-    features['max closeness node'] = api_features.maxClosenessNode(apiG)
+        # print 'Api features'
+        features['max indeg node'] = api_features.maxIndegNode(apiG)
+        features['max closeness node'] = api_features.maxClosenessNode(apiG)
 
-    # print 'Subgraph features'
-    extractSubgraphFeatures(features, G, apiG)
-    return features
+        # print 'Subgraph features'
+        extractSubgraphFeatures(features, G, apiG)
+        return features
+    except:
+        return -1
 
 
 def extractAll():
@@ -103,7 +108,8 @@ def extractAll():
     features = p.map(extract, all_files)
     print 'Writing to sqlite...'
     for i, file_name in enumerate(all_files):
-        sqlite_db[file_name] = features[i]
+        if features[i] != -1:
+            sqlite_db[file_name] = features[i]
 
 
 def main():
