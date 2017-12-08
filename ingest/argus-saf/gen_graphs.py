@@ -29,7 +29,7 @@ def getJobs():
 
 def run(job):
     apk, command = job
-    print command
+    call(command, shell=True)
 
 
 if __name__ == '__main__':
