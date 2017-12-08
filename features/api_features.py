@@ -2,7 +2,7 @@ import snap
 
 
 package_names = {}
-with open('extract/api_packages.txt') as f:
+with open('features/api_packages.txt') as f:
     for i, line in enumerate(f):
         package_names[i] = line.strip()
 

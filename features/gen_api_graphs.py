@@ -5,7 +5,7 @@ import multiprocessing
 
 api_packages = set()
 package_ids = {}
-with open('extract/api_packages.txt') as f:
+with open('features/api_packages.txt') as f:
     for i, line in enumerate(f):
         api_packages.add(line.strip())
         package_ids[line.strip()] = i

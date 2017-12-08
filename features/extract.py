@@ -12,7 +12,7 @@ import multiprocessing
 db_path = 'data/processed/data.sqlite'
 sqlite_db = SqliteDict(db_path, autocommit=True)
 
-family_types = json.load(open('extract/family_types.json'))
+family_types = json.load(open('features/family_types.json'))
 
 
 def splitData(d):
