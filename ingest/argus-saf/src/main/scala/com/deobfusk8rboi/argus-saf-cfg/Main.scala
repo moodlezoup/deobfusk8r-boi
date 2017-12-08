@@ -64,7 +64,7 @@ object Main extends App {
 
   def decompile(sourcePath: String): Unit = {
     val fileUri = FileUtil.toUri(sourcePath)
-    val outputUri = FileUtil.toUri("~/out/out")
+    val outputUri = FileUtil.toUri(".argus-pag-output")
     val reporter = new DefaultReporter
     // Yard is the apks manager
     val yard = new ApkYard(reporter)
