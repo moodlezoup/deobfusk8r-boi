@@ -24,7 +24,8 @@ object Main extends App {
     val sourcePath = commandLine.getArgList.get(0)
     val edgesPath = commandLine.getArgList.get(1)
     val keyPath = commandLine.getArgList.get(2)
-    decompile(sourcePath, edgesPath, keyPath)
+    val tmpDataPath = commandLine.getArgList.get(3)
+    decompile(sourcePath, edgesPath, keyPath, tmpDataPath)
   } catch {
     case exp: Exception =>
       println("Something's wrong:" + exp.getMessage)
@@ -59,9 +60,9 @@ object Main extends App {
     cg.getCallMap
   }
 
-  def decompile(sourcePath: String, edgePath: String, keyPath: String): Unit = {
+  def decompile(sourcePath: String, edgePath: String, keyPath: String, tmpDataPath: String): Unit = {
     val fileUri = FileUtil.toUri(sourcePath)
-    val outputUri = FileUtil.toUri(".argus-pag-output")
+    val outputUri = FileUtil.toUri(tmpDataPath)
     val reporter = new DefaultReporter
     // Yard is the apks manager
     val yard = new ApkYard(reporter)
