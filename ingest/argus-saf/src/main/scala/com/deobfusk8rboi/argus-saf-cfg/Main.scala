@@ -18,16 +18,13 @@ import scala.language.postfixOps
 import scala.concurrent.duration._
 
 object Main extends App {
-  // create the command line parser
-  val parser: CommandLineParser = new DefaultParser()
-  var commandLine: CommandLine = _
-
   try {
-    // parse the command line arguments
-    commandLine = parser.parse(new Options, args)
-    var sourcePath: String = null
-    sourcePath = commandLine.getArgList.get(0)
-    decompile(sourcePath)
+    val parser: CommandLineParser = new DefaultParser()
+    val commandLine = parser.parse(new Options, args)
+    val sourcePath = commandLine.getArgList.get(0)
+    val edgesPath = commandLine.getArgList.get(1)
+    val keyPath = commandLine.getArgList.get(2)
+    decompile(sourcePath, edgesPath, keyPath)
   } catch {
     case exp: Exception =>
       println("Something's wrong:" + exp.getMessage)
@@ -62,7 +59,7 @@ object Main extends App {
     cg.getCallMap
   }
 
-  def decompile(sourcePath: String): Unit = {
+  def decompile(sourcePath: String, edgePath: String, keyPath: String): Unit = {
     val fileUri = FileUtil.toUri(sourcePath)
     val outputUri = FileUtil.toUri(".argus-pag-output")
     val reporter = new DefaultReporter
@@ -72,8 +69,8 @@ object Main extends App {
     val strategy = DecompileStrategy(layout)
     val settings = DecompilerSettings(debugMode = false, forceDelete = true, strategy, reporter)
     val apk = yard.loadApk(fileUri, settings, collectInfo = true, resolveCallBack = true)
-    val edges = new FileWriter(new File("out.edges" ))
-    val keys = new FileWriter(new File("out.keys" ))
+    val edges = new FileWriter(new File(edgePath))
+    val keys = new FileWriter(new File(keyPath))
     dump(reaching_facts_strat(apk), edges, keys)
     keys.flush()
     keys.close()
