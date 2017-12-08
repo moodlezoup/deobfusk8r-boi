@@ -10,6 +10,7 @@ import multiprocessing
 
 
 db_path = 'data/processed/data.sqlite'
+sqlite_db = SqliteDict(db_path, autocommit=True)
 
 family_types = json.load(open('extract/family_types.json'))
 
@@ -94,12 +95,15 @@ def extract(f):
 
     # print 'Subgraph features'
     extractSubgraphFeatures(features, G, apiG)
-    sqlite_db[file_name] = features
+    return features
 
 
 def extractAll():
     p = multiprocessing.Pool(multiprocessing.cpu_count())
-    p.map(extract, all_files)
+    features = p.map(extract, all_files)
+    print 'Writing to sqlite...'
+    for i, file_name in enumerate(all_files):
+        sqlite_db[file_name] = features[i]
 
 
 def main():
@@ -110,8 +114,6 @@ def main():
     for d in [files_by_family, files_by_type, files_by_type2]:
         splitData(d)
 
-    global sqlite_db
-    sqlite_db = SqliteDict(db_path, autocommit=True)
     sqlite_db['files_by_family'] = files_by_family
     sqlite_db['files_by_type'] = files_by_type
     sqlite_db['files_by_type2'] = files_by_type2
