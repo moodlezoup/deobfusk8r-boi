@@ -3,14 +3,21 @@ import multiprocessing
 from subprocess import call
 
 def makeCommand(apk_path, edges_path, key_path):
-    return 'java -jar target/scala-2.12/Argus-SAF-CFG-Extractor.jar %s %s %s' %
-        (apk_path, edges_path, key_path)
+    return 'java -jar target/scala-2.12/Argus-SAF-CFG-Extractor.jar %s %s %s' % (apk_path, edges_path, key_path)
+
+def makeDir(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 def getJobs():
     jobs = []
+    outer_output = '/home/ec2-user/output'
+    makeDir(outer_output)
+    output_parent = outer_output + '/argus' 
     for family in os.listdir('/home/ec2-user/ssd1/amd_data'):
         path = '/home/ec2-user/ssd1/amd_data/' + family
-        output_path = '/home/ec2-user/output/argus/' + family
+        output_path = output_parent + '/' + family
+        makeDir(output_path)
         for apk in os.listdir(path):
             apk_path = path + '/' + apk
             basename = apk.rsplit('.',1)[0]
@@ -22,8 +29,7 @@ def getJobs():
 
 def run(job):
     apk, command = job
-    print apk
-    call(job, shell=True)
+    print command
 
 
 if __name__ == '__main__':
