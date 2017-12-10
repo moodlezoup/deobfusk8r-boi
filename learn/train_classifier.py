@@ -17,38 +17,38 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, ExtraTreesClassifier, GradientBoostingClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.preprocessing import LabelEncoder
 
 
-from xgboost import XGBClassifier
-# from sklearn.preprocessing import LabelEncoder
+import xgboost as xgb
 
 
 db_path = 'data/processed/data.sqlite'
 
-def generateClassifier(grouping, clf=KNeighborsClassifier(3)):
+def generateClassifier(grouping, clf=ExtraTreesClassifier(criterion='entropy', max_features=0.7)):
     with SqliteDict(db_path, autocommit=True) as sqlite_db:
         X = sqlite_db[grouping + ' train_x_vectorized']
         Y = sqlite_db[grouping + ' train_y']
 
         # clf = KNeighborsClassifier(n_neighbors=6, weights='distance', p=1, n_jobs=-1)
-        # clf = XGBClassifier(max_depth=4, learning_rate=0.1, n_estimators=100, objective='multi:softprob')
+        # clf = xgb.XGBClassifier(max_depth=4, learning_rate=0.1, n_estimators=100, objective='multi:softprob')
         clf = ExtraTreesClassifier(criterion='entropy', max_features=0.7)
         # clf = RandomForestClassifier()
         # clf = DecisionTreeClassifier()
 
-        # print '=========== Train ==========='
-        # predictions = model_selection.cross_val_predict(clf, X, Y, cv=5)
-        # print metrics.classification_report(Y, predictions)
-        # print "Accuracy: " + str(metrics.accuracy_score(Y, predictions))
-        # print '============================='
+        print '=========== Train ==========='
+        predictions = model_selection.cross_val_predict(clf, X, Y, cv=5)
+        print metrics.classification_report(Y, predictions)
+        print "Accuracy: " + str(metrics.accuracy_score(Y, predictions))
+        print '============================='
 
-        clf.fit(X, Y)
-        vectorizer = sqlite_db['vectorizer']
-        feature_names = vectorizer.get_feature_names()
-        feature_importances = clf.feature_importances_
+        # clf.fit(X, Y)
+        # vectorizer = sqlite_db['vectorizer']
+        # feature_names = vectorizer.get_feature_names()
+        # feature_importances = clf.feature_importances_
 
-        for (name, importance) in sorted(zip(feature_names, feature_importances), key = lambda x: x[1], reverse=True):
-            print name, importance
+        # for (name, importance) in sorted(zip(feature_names, feature_importances), key = lambda x: x[1], reverse=True):
+        #     print name, importance
 
         #
         # print '=========== Test ============'
@@ -105,14 +105,37 @@ def parameterTuning(grouping):
 
 
 def XGBoostClassifier(grouping):
+    clf = xgb.XGBClassifier(
+        learning_rate = 0.1,
+        n_estimators=394,
+        max_depth=5,
+        min_child_weight=1,
+        gamma=0,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        objective= 'multi:softprob',
+        scale_pos_weight=1,
+        seed=27
+    )
+
+    # with SqliteDict(db_path, autocommit=True) as sqlite_db:
+    #     X = sqlite_db[grouping + ' train_x_vectorized']
+    #     Y = sqlite_db[grouping + ' train_y']
+    #     xgb_param = clf.get_xgb_params()
+    #     xgb_param['num_class'] = 5
+    #     xgtrain = xgb.DMatrix(X, label=LabelEncoder().fit_transform(Y))
+    #     cvresult = xgb.cv(xgb_param, xgtrain, num_boost_round=clf.get_params()['n_estimators'], nfold=5, early_stopping_rounds=50)
+    #     print cvresult.shape[0]
+
     pipeline = Pipeline([
-        ('clf', XGBClassifier(nthread=4)),
+        ('clf', clf),
     ])
     params = [{
-        'clf__max_depth': [4],
-        'clf__learning_rate': [0.1],
-        'clf__n_estimators': [100],
-        'clf__objective': ['multi:softprob'],
+        'clf__max_depth': [6, 7],
+        'clf__min_child_weight': [6, 7],
+        # 'clf__learning_rate': [0.1],
+        # 'clf__n_estimators': [100],
+        # 'clf__objective': ['multi:softprob'],
     }]
 
     with SqliteDict(db_path, autocommit=True) as sqlite_db:
@@ -138,7 +161,7 @@ def XGBoostClassifier(grouping):
     # with SqliteDict(db_path, autocommit=True) as sqlite_db:
     #     X = sqlite_db[grouping + ' train_x_vectorized']
     #     Y = sqlite_db[grouping + ' train_y']
-    #     clf = XGBClassifier(nthread=4)
+    #     clf = xgb.XGBClassifier(nthread=4)
     #     # model.fit(X, Y)
     #
     #     print '=========== Train ==========='
@@ -150,7 +173,6 @@ def XGBoostClassifier(grouping):
 
 if __name__ == "__main__":
     print 'learning'
-    # XGBoostClassifier('files_by_type2')
+    XGBoostClassifier('files_by_family2')
     # parameterTuning('files_by_type2')
-    generateClassifier('files_by_family2')
-    # tryManyThings('files_by_family')
+    # generateClassifier('files_by_family2')
