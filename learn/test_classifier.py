@@ -49,6 +49,15 @@ def plot_confusion_matrix(cm, classes,
 def fixFeatureName(name):
     return name.replace('Api', '(API)').replace('api_', '(API) ')
 
+def getColor(name):
+    if '(API)' in name:
+        if 'subgraph' in name:
+            return 'b'
+        else:
+            return 'r'
+    else:
+        return 'g'
+
 
 def testClassifier(grouping):
         with SqliteDict(db_path, autocommit=True) as sqlite_db:
@@ -72,10 +81,11 @@ def testClassifier(grouping):
             sorted_features = sorted(zip(feature_names, feature_importances), key=lambda x: x[1], reverse=True)[:20]
             sorted_importances = [feature[1] for feature in sorted_features]
             sorted_names = [fixFeatureName(feature[0]) for feature in sorted_features]
+            sorted_colors = [getColor(name) for name in sorted_names]
 
             fig = plt.figure()
             ax = fig.add_subplot(111)
-            bars = ax.bar(range(len(sorted_features)), sorted_importances, width=0.7, align="center")
+            bars = ax.bar(range(len(sorted_features)), sorted_importances, width=0.7, align="center", color=sorted_colors)
             ax.set_ylabel('Normalized importance')
             ax.set_xticks(range(len(sorted_names)))
             ax.set_xticklabels(sorted_names, rotation=45, ha='right')
